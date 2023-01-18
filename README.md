@@ -92,7 +92,9 @@ He has 2 arguments. (exp. ```void test( int argc, char *argv[]) ```)
 ## Errors
 
 The ```read()``` or ```doCommand()``` return false if a error accoutred.
+
 Use ```getError()``` to get the error code.
+
      1  No error.
     -1  Memory allocation problem.
     -2  Empty line.
