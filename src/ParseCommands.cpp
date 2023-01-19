@@ -1,6 +1,6 @@
 /***********************************
  * @file ParseCommands.cpp
- * @author Gfy (mrgoofy@gmx.net)
+ * @author Gfy63 (mrgoofy@gmx.net)
  * 
  * GPLv2 Licence https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
  * 

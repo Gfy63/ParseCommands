@@ -1,6 +1,6 @@
 /***********************************
  * @file ParseCommands.h
- * @author Gfy (mrgoofy@gmx.net)
+ * @author Gfy63 (mrgoofy@gmx.net)
  * @brief Collect command char inputs and parse it, CR ends the command. LF is ignored.
  *        Default input length is 16, default parameter count is 5.
  *        If the command is found in the command list,
