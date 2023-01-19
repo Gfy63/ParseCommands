@@ -9,7 +9,7 @@ Evaluate commands entered over serial or as string and call a defined function.
 * Error detection.
 
 ## INSTALLATION & DOWNLOAD
-Download via [github](https://...)
+Download via [github](https://github.com/Gfy63/ParseCommands.git)
 
 ## BASIC USAGE
 
@@ -37,10 +37,18 @@ void test( int argc, char *argv[] )
 
 ### SETUP
 
+The commands and callback functions are defind in a struct.
+
 ```cpp
-// Link the commands.
-pCmd.begin( commandList );
+// Define the commands and hear callback functions
+struct ParseCommands::command_t commandList[] = {
+// command, callback function
+    "test", CmdTest,
+    "test2", CmdTest2,
+    NULL, NULL              // END OF LIST (NEEDED)
+};
 ```
+
 The last entry in the command list must by ```NULL, NULL```, this terminate the list.
 
 ### LOOP
