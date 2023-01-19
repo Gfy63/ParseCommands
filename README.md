@@ -38,6 +38,7 @@ void test( int argc, char *argv[] )
 ### SETUP
 
 The commands and callback functions are defind in a struct.
+The commands are case sensitive.
 
 ```cpp
 // Define the commands and hear callback functions

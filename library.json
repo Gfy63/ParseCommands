@@ -20,6 +20,6 @@
   "homepage": "https://github.com/Gfy63/ParseCommands/",
   "dependencies": {
   },
-  "frameworks": "Arduino",
+  "frameworks": ["Arduino"],
   "platforms": "*"
 }
