@@ -5,8 +5,8 @@
  *        Default input length is 16, default parameter count is 5.
  *        If the command is found in the command list,
  *        than there callback function is called.
- * @version 1.0.1
- * @date 2023-01-22
+ * @version 1.1.0
+ * @date 2023-01-26
  * 
  * GPLv2 Licence https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
  * 
@@ -19,28 +19,17 @@
 #include <Arduino.h>
 #include <string.h>
 
-#define PC_DEBUG
-
-#ifdef PC_DEBUG
-    #define DPRINT(...)         Serial.print(__VA_ARGS__)
-    #define DPRINTLN(...)       Serial.println(__VA_ARGS__)
-    #define DDELAY(...)         delay(__VA_ARGS__)
-    #define VAR_PRINT(...)      Serial.print(F(#__VA_ARGS__" = ")); Serial.print(__VA_ARGS__); Serial.print(F(" "))
-    #define VAR_PRINTLN(...)    VAR_PRINT(__VA_ARGS__); Serial.println()
-#else
-    #define DPRINT(...)
-    #define DPRINTLN(...)
-    #define DDELAY(...)
-    #define VAR_PRINT(...)
-    #define VAR_PRINTLN(...)
-#endif
-
 class ParseCommands
 {
     protected:
         typedef void( *CallbackFunction)(int argc, char *argv[]);
 
     public:
+        /**
+         * List of allowed EOL values. (CRLF (default), CR, LF, LFCR 
+        */
+        enum EOL { CRLF=0, CR, LF, LFCR };
+
         /**
          * List of commands follow by the callback function.
          * The list ends with 'NULL, NULL'
@@ -81,7 +70,14 @@ class ParseCommands
          * @return true     Command ok
          *         false    Command not correct. See getError() for more details.  
          */
-       bool doCommand( const char *c );
+        bool doCommand( const char *c );
+
+        /**
+         * @brief Select EOL.
+         * 
+         * @param eol CRLF (default), CR, LF, LFCR
+         */
+        void setEOL( int eol );
 
         /**
          * @brief Get error code if false is returned.
@@ -102,9 +98,15 @@ class ParseCommands
         // Command list.
         command_t *_cmds;
 
-        // Data in.
-        #define sCR 0x0D            // Carriage Return  (13)    \r
-        #define sLF 0x0A            // Line Feed        (10)    \n
+        #define EOLCNT 4
+        char const *_eolArry[EOLCNT] = {
+            "\r\n",     // CR LF
+            "\r",       // CR
+            "\n",       // LF
+            "\n\r"      // LF CR
+        };
+        int _eol = CRLF;    // Default.
+
         int _cmdBufferSize=16;      // Max command buffer size.
         char *_cmdBuffer;           // Command buffer. +1 for \0
 
@@ -115,7 +117,7 @@ class ParseCommands
         int _argc;                  // Count of arguments.
 
         bool _memOK = false;        // Allocation memory for _bmdBuffer & _argv ok if true.
-        int _err = 1;               // Error code from read() and pars().
+        int _err = 1;               // Error code from read(), doCommand() and parse().
 
         /**
          * @brief Command complete read. (CR or LF read)

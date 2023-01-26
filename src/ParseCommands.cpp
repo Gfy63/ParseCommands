@@ -9,9 +9,10 @@
 
 #include "ParseCommands.h"
 
-/*
+/**
  * --- PUBLIC FUNCTIONS ---
 */
+
 ParseCommands::ParseCommands( command_t *c, size_t bufferSize, size_t argCnt )
 {
     _cmds = c;
@@ -30,13 +31,10 @@ ParseCommands::ParseCommands( command_t *c )
     _memOK = AllocateMemory( _cmdBufferSize, _argcMax );
 }
 
-// void ParseCommands::begin( command_t *c ) { _cmds = c; }
-
 bool ParseCommands::read( char data )
 {
     if( !_memOK )       // Memory allocation problems.
     {
-DPRINTLN( "Memory allocation problems!");
         _err = -1;
         return false;
     }
@@ -44,22 +42,27 @@ DPRINTLN( "Memory allocation problems!");
     int index = strlen(_cmdBuffer);         // Index to the end of the used _cmdBuffer.
     static bool maxLenReached = false;      // Max command len reached if true.
 
-    if( data == sLF )       // Ignore LF.
+    if(index>=_cmdBufferSize)
     {
-DPRINTLN( "LF" );
-        return true;
-    }
+        // Max len detected.
+        maxLenReached = true;
 
-    if( data == sCR && index==0)    // Ignore first char if CR.
-    {   
-DPRINTLN( "Empty cmd" );
-        _err = -2;
+        _err = -3;
         return false;
     }
 
+    // Add char to command buffer.
+    _cmdBuffer[index]=data;
+    index++;
+    _cmdBuffer[index]= '\0';
+    _err = 1;       // Clear error code.
+
     // EoL found. Command complete.
-    if(data==sCR)
+    char* eolFound = strstr( _cmdBuffer, _eolArry[_eol] );
+    if( eolFound )
     {
+        eolFound[0] = '\0';     // Cutoff EOL.
+
         if( !maxLenReached )
         {
             // Command complete to parse.
@@ -74,29 +77,10 @@ DPRINTLN( "Empty cmd" );
             _cmdBuffer[0] = '\0';       // Clear input. Ready for next command.
             maxLenReached = false;      // Ready for next input.
 
-DPRINTLN( "Cmd ignor while to long." );
             _err = -4;
             return false;
         }
     }
-
-    if(index>=_cmdBufferSize)
-    {
-        // Max len detected.
-        maxLenReached = true;
-
-DPRINT( "Max len reached: >" );
-DPRINTLN( _cmdBufferSize );
-        _err = -3;
-        return false;
-    }
-
-    // Add char to command buffer.
-    _cmdBuffer[index]=data;
-    index++;
-    _cmdBuffer[index]= '\0';
-    _err = 1;       // Clear error code.
-        
     return true;
 
 } // Read()
@@ -105,20 +89,14 @@ bool ParseCommands::doCommand( const char *c )
 {
     _err = 1;                   // Clear error code.
 
-DPRINT( "commad: ");
-DPRINTLN( c);
-
     if( !_memOK )       // Memory allocation problems.
     {
-DPRINTLN( "Memory allocation problems!");
         _err = -1;
         return false;
     }
 
     if( (int)strlen(c) > _cmdBufferSize )
     {   
-DPRINT( "Max len reached: " );
-DPRINTLN( _cmdBufferSize );
         _err = -3;
         return false;
     }
@@ -132,9 +110,11 @@ DPRINTLN( _cmdBufferSize );
 
 } // doCommand()
 
+void ParseCommands::setEOL( int eol ) { if( eol>=0 || eol<=EOLCNT) _eol = eol; }
+
 int ParseCommands::getError( void ) { return _err; }
 
-/*
+/**
  * --- PRIVATE FUNCTION ---
 */
 
@@ -163,19 +143,11 @@ bool ParseCommands::parse( void )
         if( _argc > _argcMax )
         {
             // To many parameter.
-DPRINTLN( "Too many arguments" );
             _err = -6;
             return false;       
         }
         split = strtok( NULL, " " );        // Next split.
     }
-
-    // * DEBUG *
-    // char log[128];
-    // sprintf( log, "Cnt: %i Cmd:%s Param:", _paramCnt, _cmd);
-    // for( int i=0; i<_paramCnt; i++)
-    //  sprintf( log, "%s %i %s", log, i, _paramList[i]);
-    // Serial.println( log );
 
     // Search for command in list.
     int index = 0;
@@ -198,7 +170,6 @@ DPRINTLN( "Too many arguments" );
         cb( _argc, _argv );         // Call function.
     else
     {
-DPRINTLN( "No command found" );
         _err = -5;
     }
 
@@ -223,7 +194,7 @@ bool ParseCommands::AllocateMemory( size_t bs, size_t argc )
     {
         _cmdBufferSize = bs;
         _argcMax = argc;
-        _cmdBuffer[0] = '\0';                           // Clear input buffer.
+        _cmdBuffer[0] = '\0';       // Clear input buffer.
     }
 
     return noErr;

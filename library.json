@@ -1,6 +1,6 @@
 {
   "name": "ParseCommands",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Evaluate commands entered over serial or as string and call a defined function.",
   "keywords": "stream, parse, command, parameter, callback",
   "repository":
