@@ -80,7 +80,11 @@ If the size exceed the device possibilities, you get an error, and no input is p
 
 ## Setup method
 The command ends with the ```EOL```.
-```setEOL( int eol );``` - set the EOL. Allowd are:
+
+```setEOL( int eol );``` - set the EOL. 
+
+Allowd are:
+
     CRLF (default)
     CR
     LF
