@@ -17,7 +17,7 @@ Install via the Arduino Library Manager, the PlatformIO Library Manager or downl
 ### INSTANTIATE
 
 ```cpp
-#include <ParseCommands>
+#include <ParseCommands.h>
 
 // Define the commands and hear callback functions
 struct ParseCommands::command_t commandList[] = {
@@ -123,4 +123,6 @@ Use ```getError()``` to get the error code.
     -4  Input to long.
     -5  Command not found.
     -6  Too many arguments.
+
+Use ```getErrorText()``` to get the eroor text.
     

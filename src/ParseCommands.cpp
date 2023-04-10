@@ -114,6 +114,34 @@ void ParseCommands::setEOL( int eol ) { if( eol>=0 || eol<=EOLCNT) _eol = eol; }
 
 int ParseCommands::getError( void ) { return _err; }
 
+const __FlashStringHelper * ParseCommands::getErrorText( void )
+{
+    switch( _err )
+    {
+        case -1:
+            return F("Memory allocation problem.");
+        
+        case -2:
+            return F("Empty line.");
+
+        case -3:
+            return F("Too many char input.");
+
+        case -4:
+            return F("Input to long.");
+
+        case -5:
+            return F("Command not found.");
+
+        case -6:
+            return F("Too many arguments.");
+
+    }
+
+    return F("No error");
+
+} // getErrorText()
+
 /**
  * --- PRIVATE FUNCTION ---
 */
@@ -181,13 +209,14 @@ bool ParseCommands::AllocateMemory( size_t bs, size_t argc )
 {
     bool noErr = true;
 
-    if( bs<=0 || argc<=0 ) noErr = false;       // Wrong size.
+    if( bs<=0 || argc<=0 )
+        noErr = false;       // Wrong size.
     else
     {
-        _cmdBuffer = (char *) malloc( (bs+1) * sizeof(char) );
+        _cmdBuffer = (char *) malloc( (bs+1) * sizeof( char ) );
         _argv = (char **) malloc( (argc+1) * sizeof( char* ) );
 
-        if( _cmdBuffer==NULL || _argv==NULL ) noErr = false;;   // malloc faild.
+        if( _cmdBuffer==NULL || _argv==NULL ) noErr = false;   // malloc faild.
     }
 
     if( noErr )

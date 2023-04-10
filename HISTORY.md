@@ -1,3 +1,7 @@
+### 1.2.3 - 2023-04-10
+
+    * Added 'getErrorText()'.
+    
 ### 1.1.2 - 2023-02-04
 
     * Change example name

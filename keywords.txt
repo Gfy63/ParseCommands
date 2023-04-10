@@ -16,6 +16,7 @@ read KEYWORD2
 doCommand KEYWORD2
 setEOL KEYWORD2
 getError KEYWORD2
+getErrorText KEYWORD2
 
 #######################################
 # Structure (KEYWORD3)

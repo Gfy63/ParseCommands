@@ -1,5 +1,5 @@
 /**
- * Exemple using ParseCommands library.
+ * Example using ParseCommands library.
 */
 #include <Arduino.h>
 
@@ -8,6 +8,10 @@
 // Declare functions.
 void CmdTest( int argc, char *argv[] );
 void CmdTest2( int argc, char *argv[] );
+
+void display_freeram();
+int freeRam();
+
 
 // List of commands with callback to functions.
 struct ParseCommands::command_t commandList[] = {
@@ -20,8 +24,8 @@ struct ParseCommands::command_t commandList[] = {
 /**
  * Instatiate an ParseCommands.
 */
-ParseCommands pCmd( commandList );
-// ParseCommands pCmd( commandList, 32 );
+// ParseCommands pCmd( commandList );
+ParseCommands pCmd( commandList, 32 );
 // ParseCommands pCmd( commandList, 48, 5 );
 
 void setup()
@@ -51,6 +55,8 @@ void loop()
 	{	
 		Serial.print( "Error code: ");
 		Serial.println( pCmd.getError() );
+		Serial.println(pCmd.getErrorText() );
+
 		err = true;
 	}
 }

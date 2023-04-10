@@ -41,7 +41,6 @@ class ParseCommands
 
         /**
          * @brief Constructors.
-         * 
          * @param c Command list. Last entry is 'NULL, NULL'.
          * @param bufferLen Len of the input buffer. (default=16)
          * @param argCnt Number of arguments allowed. (default=3)
@@ -54,9 +53,7 @@ class ParseCommands
 
         /**
          * @brief Read char of incoming command & parameter.
-         * 
          * @param data Incoming char.
-         * 
          * @return true     Data read ok.
          *         false    Data read error. See getError() for more details.  
          */
@@ -64,9 +61,7 @@ class ParseCommands
 
         /**
          * @brief Do parse a command string.
-         * 
          * @param c Command to parse.
-         * 
          * @return true     Command ok
          *         false    Command not correct. See getError() for more details.  
          */
@@ -74,14 +69,12 @@ class ParseCommands
 
         /**
          * @brief Select EOL.
-         * 
          * @param eol CRLF (default), CR, LF, LFCR
          */
         void setEOL( int eol );
 
         /**
          * @brief Get error code if false is returned.
-         * 
          * @return Error code:
          *           1  No error.
          *          -1  Memory allocation problem.
@@ -92,6 +85,12 @@ class ParseCommands
          *          -6  Too many arguments.
          */
         int getError( void );
+
+        /**
+         * @brief Return error as text.
+         * @return  Error text.
+        */
+        const __FlashStringHelper * getErrorText( void );
 
     private:
 
@@ -116,14 +115,13 @@ class ParseCommands
         char **_argv;               // List of arguments.
         int _argc;                  // Count of arguments.
 
-        bool _memOK = false;        // Allocation memory for _bmdBuffer & _argv ok if true.
+        bool _memOK = false;        // Allocation memory for _bmdBuffer & _argv, ok if true.
         int _err = 1;               // Error code from read(), doCommand() and parse().
 
         /**
          * @brief Command complete read. (CR or LF read)
          *        - Split _cmdBuffer to cmd and parameters.
          *        - Search Callback and call it.
-         * 
          * @return true     command found.
          *         false    command not found.
          */
@@ -131,10 +129,8 @@ class ParseCommands
 
         /**
          * @brief Allocate memory for _cmdBuffer & _argv.
-         * 
          * @param bs Input Buffer size.
          * @param argc Max arguments count.
-         * 
          * @return true     Memory allocation ok
          *         false    Error. No memory allocated. 
          */
