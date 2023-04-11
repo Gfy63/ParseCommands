@@ -42,15 +42,6 @@ bool ParseCommands::read( char data )
     int index = strlen(_cmdBuffer);         // Index to the end of the used _cmdBuffer.
     static bool maxLenReached = false;      // Max command len reached if true.
 
-    if(index>=_cmdBufferSize)
-    {
-        // Max len detected.
-        maxLenReached = true;
-
-        _err = -3;
-        return false;
-    }
-
     // Add char to command buffer.
     _cmdBuffer[index]=data;
     index++;
@@ -61,7 +52,16 @@ bool ParseCommands::read( char data )
     char* eolFound = strstr( _cmdBuffer, _eolArry[_eol] );
     if( eolFound )
     {
+        Serial.println( "EOL" );
+
         eolFound[0] = '\0';     // Cutoff EOL.
+
+        if( strlen( _cmdBuffer ) == 0 )
+        {
+            // Empty line.
+            _err = -2;
+            return false;
+        }
 
         if( !maxLenReached )
         {
@@ -73,6 +73,7 @@ bool ParseCommands::read( char data )
         }
         else
         {
+            Serial.println( "Err -4" );
             // Ignore input while to long.
             _cmdBuffer[0] = '\0';       // Clear input. Ready for next command.
             maxLenReached = false;      // Ready for next input.
@@ -80,7 +81,18 @@ bool ParseCommands::read( char data )
             _err = -4;
             return false;
         }
+    } // EOL found
+    
+    // Code must be behind EOL detection.
+    if(index>=_cmdBufferSize)
+    {
+        // Max len detected.
+        maxLenReached = true;
+
+        _err = -3;
+        return false;
     }
+
     return true;
 
 } // Read()
