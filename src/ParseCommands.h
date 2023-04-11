@@ -5,7 +5,7 @@
  *        Default input length is 16, default parameter count is 5.
  *        If the command is found in the command list,
  *        than there callback function is called.
- * @version 1.2.4
+ * @version 1.2.5
  * @date 2023-04-11
  * 
  * GPLv2 Licence https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt

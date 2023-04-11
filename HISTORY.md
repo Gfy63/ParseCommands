@@ -1,4 +1,4 @@
-### 1.2.4 - 2023-04-11
+### 1.2.5 - 2023-04-11
 
     * Bug   EOL dont reset error -3 (Too many char input.)
     * Bug   No detection of empty line.
