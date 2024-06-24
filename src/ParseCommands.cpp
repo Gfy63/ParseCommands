@@ -13,6 +13,8 @@
  * --- PUBLIC FUNCTIONS ---
 */
 
+//--- Constructor ---
+
 ParseCommands::ParseCommands( command_t *c, size_t bufferSize, size_t argCnt )
 {
     _cmds = c;
@@ -21,15 +23,24 @@ ParseCommands::ParseCommands( command_t *c, size_t bufferSize, size_t argCnt )
 
 ParseCommands::ParseCommands( command_t *c, size_t bufferSize )
 {
+    // ParseCommands( c, bufferSize, _argcMax );
     _cmds = c;
     _memOK = AllocateMemory( bufferSize, _argcMax );
 }
 
 ParseCommands::ParseCommands( command_t *c )
 {
+    // ParseCommands( c, _cmdBufferSize, _argcMax );
     _cmds = c;
     _memOK = AllocateMemory( _cmdBufferSize, _argcMax );
 }
+
+// ParseCommands::ParseCommands() {}			// Empty constructor.
+
+////////////////////////////////////
+
+// ParseCommands::begin( command_t *c, size_t bufferSize, size_t argCnt )
+////////////////////////////////////
 
 bool ParseCommands::read( char data )
 {
@@ -64,6 +75,8 @@ bool ParseCommands::read( char data )
         if( !maxLenReached )
         {
             // Command complete to parse.
+            strcpy( _lastCommand, _cmdBuffer );   // Copy of command.
+
             bool ret = parse();         // False if error.
             if( ret ) _err = 1;         // Clear error code.
             _cmdBuffer[0] = '\0';       // Clear input. Ready for next command.
@@ -94,6 +107,8 @@ bool ParseCommands::read( char data )
 
 } // Read()
 
+////////////////////////////////////
+
 bool ParseCommands::doCommand( const char *c )
 {
     _err = 1;                   // Clear error code.
@@ -119,9 +134,19 @@ bool ParseCommands::doCommand( const char *c )
 
 } // doCommand()
 
+////////////////////////////////////
+
+char * ParseCommands::getLastCommand( void ) { return _lastCommand; }
+
+////////////////////////////////////
+
 void ParseCommands::setEOL( int eol ) { if( eol>=0 || eol<=EOLCNT) _eol = eol; }
 
+////////////////////////////////////
+
 int ParseCommands::getError( void ) { return _err; }
+
+////////////////////////////////////
 
 const __FlashStringHelper * ParseCommands::getErrorText( void )
 {
@@ -214,6 +239,8 @@ bool ParseCommands::parse( void )
 
 } // Parse()
 
+////////////////////////////////////
+
 bool ParseCommands::AllocateMemory( size_t bs, size_t argc )
 {
     bool noErr = true;
@@ -223,9 +250,10 @@ bool ParseCommands::AllocateMemory( size_t bs, size_t argc )
     else
     {
         _cmdBuffer = (char *) malloc( (bs+1) * sizeof( char ) );
+        _lastCommand = (char *) malloc( (bs+1) * sizeof( char ) );
         _argv = (char **) malloc( (argc+1) * sizeof( char* ) );
 
-        if( _cmdBuffer==NULL || _argv==NULL ) noErr = false;   // malloc faild.
+        if( _cmdBuffer==NULL || _lastCommand==NULL || _argv==NULL ) noErr = false;   // malloc faild.
     }
 
     if( noErr )
@@ -238,3 +266,5 @@ bool ParseCommands::AllocateMemory( size_t bs, size_t argc )
     return noErr;
 
 } // AllocateMemory()
+
+// End of 'ParseCommands.cpp'.

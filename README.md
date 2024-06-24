@@ -30,7 +30,7 @@ struct ParseCommands::command_t commandList[] = {
 ParseCommands pCmd( commandList );         // Constructor.
 
 // Create all in the struct defined callback functions
-void test( int argc, char *argv[] )
+void CmdTest( int argc, char *argv[] )
 {
     Serial.println( "test()");
 }
@@ -124,5 +124,5 @@ Use ```getError()``` to get the error code.
     -5  Command not found.
     -6  Too many arguments.
 
-Use ```getErrorText()``` to get the eroor text.
+Use ```getErrorText()``` to get the error text.
     

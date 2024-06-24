@@ -1,3 +1,7 @@
+### 1.3.0 - 2024-06-24
+
+    * Added 'getLastCommand()'.
+    
 ### 1.2.5 - 2023-04-11
 
     * Bug   EOL dont reset error -3 (Too many char input.)

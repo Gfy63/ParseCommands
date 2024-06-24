@@ -14,6 +14,7 @@ CallbackFunction KEYWORD1
 #######################################
 read KEYWORD2
 doCommand KEYWORD2
+getLastCommand KEYWORD2
 setEOL KEYWORD2
 getError KEYWORD2
 getErrorText KEYWORD2
