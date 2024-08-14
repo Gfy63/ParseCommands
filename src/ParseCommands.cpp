@@ -4,7 +4,7 @@
  * 
  * GPLv2 Licence https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
  * 
- * @copyright 2023
+ * @copyright 2023-24
  **********************************/
 
 #include "ParseCommands.h"
@@ -15,95 +15,112 @@
 
 //--- Constructor ---
 
-ParseCommands::ParseCommands( command_t *c, size_t bufferSize, size_t argCnt )
+ParseCommands::ParseCommands( pcmd_command_t *c, size_t bufferSize, size_t argCnt )
 {
-    _cmds = c;
-    _memOK = AllocateMemory( bufferSize, argCnt );
+	begin( c, bufferSize, argCnt );
 }
 
-ParseCommands::ParseCommands( command_t *c, size_t bufferSize )
+ParseCommands::ParseCommands( pcmd_command_t *c, size_t bufferSize )
 {
-    // ParseCommands( c, bufferSize, _argcMax );
-    _cmds = c;
-    _memOK = AllocateMemory( bufferSize, _argcMax );
+	begin( c, bufferSize );
 }
 
-ParseCommands::ParseCommands( command_t *c )
+ParseCommands::ParseCommands( pcmd_command_t *c )
 {
-    // ParseCommands( c, _cmdBufferSize, _argcMax );
-    _cmds = c;
-    _memOK = AllocateMemory( _cmdBufferSize, _argcMax );
+	begin( c );
 }
 
-// ParseCommands::ParseCommands() {}			// Empty constructor.
+ParseCommands::ParseCommands() {}			// Empty constructor.
 
 ////////////////////////////////////
 
-// ParseCommands::begin( command_t *c, size_t bufferSize, size_t argCnt )
+void ParseCommands::begin( pcmd_command_t *c, size_t bufferSize, size_t argCnt )
+{
+	_cmds = c;
+	_memOK = AllocateMemory( bufferSize, argCnt );
+}
+
+void ParseCommands::begin( pcmd_command_t *c, size_t bufferSize )
+{
+	begin( c, bufferSize, _argcMax );
+}
+
+void ParseCommands::begin( pcmd_command_t *c )
+{
+   begin( c, _cmdBufferSize, _argcMax );
+}
+
 ////////////////////////////////////
 
 bool ParseCommands::read( char data )
 {
-    if( !_memOK )       // Memory allocation problems.
-    {
-        _err = -1;
-        return false;
-    }
+	_lastChar = data;
 
-    int index = strlen(_cmdBuffer);         // Index to the end of the used _cmdBuffer.
-    static bool maxLenReached = false;      // Max command len reached if true.
+	DoEventCall( PCMD_INPUT_CHAR_EVT );
 
-    // Add char to command buffer.
-    _cmdBuffer[index]=data;
-    index++;
-    _cmdBuffer[index]= '\0';
-    _err = 1;       // Clear error code.
+	if( !isMemoryOK() ) return false;
 
-    // EoL found. Command complete.
-    char* eolFound = strstr( _cmdBuffer, _eolArry[_eol] );
-    if( eolFound )
-    {
-        eolFound[0] = '\0';     // Cutoff EOL.
+	int index = strlen(_cmdBuffer);         // Index to the end of the used _cmdBuffer.
+	static bool maxLenReached = false;      // Max command len reached if true.
 
-        if( strlen( _cmdBuffer ) == 0 )
-        {
-            // Empty line.
-            _err = -2;
-            return false;
-        }
+	// Add char to command buffer.
+	_cmdBuffer[index] = data;
+	index++;
+	_cmdBuffer[index] = '\0';
 
-        if( !maxLenReached )
-        {
-            // Command complete to parse.
-            strcpy( _lastCommand, _cmdBuffer );   // Copy of command.
+	// EoL found. Command complete.
+	char* eolFound = strstr( _cmdBuffer, _eolArry[_eol] );
+	if( eolFound )
+	{
+		eolFound[0] = '\0';     // Cutoff EOL.
 
-            bool ret = parse();         // False if error.
-            if( ret ) _err = 1;         // Clear error code.
-            _cmdBuffer[0] = '\0';       // Clear input. Ready for next command.
-            return ret;
-        }
-        else
-        {
-            // Ignore input while to long.
-            _cmdBuffer[0] = '\0';       // Clear input. Ready for next command.
-            maxLenReached = false;      // Ready for next input.
+		if( strlen( _cmdBuffer ) == 0 )
+		{
+			// Empty line.
+			_err = PCMD_EMPLY_LINE_ERR;
+			DoEventCall( PCMD_ERROR_EVT );
 
-            _err = -4;
-            return false;
-        }
-    } // EOL found
-    
-    // Code must be behind EOL detection.
-    if(index>=_cmdBufferSize)
-    {
-        // Max len detected.
-        maxLenReached = true;
+			return false;
+		}
 
-        _err = -3;
-        return false;
-    }
+		if( maxLenReached )
+		{
+			// Ignore input while to long.
+			_cmdBuffer[0] = '\0';       // Clear input. Ready for next command.
+			maxLenReached = false;      // Ready for next input.
 
-    return true;
+			_err = PCMD_INPUT_TO_LONG_ERR;
+			DoEventCall( PCMD_ERROR_EVT );
+
+		   return false;
+		}
+
+		// Command complete to parse.
+		strcpy( _lastCommand, _cmdBuffer );   // Copy of command.
+
+		DoEventCall( PCMD_READ_COMMAND_EVT );
+
+		bool ret = parse();         		// False if error.
+		if( ret ) _err = PCMD_COMMAND_OK;	// Clear error code.
+		_cmdBuffer[0] = '\0';       		// Clear input. Ready for next command.
+
+		return ret;
+
+	} // EOL found
+	
+	// Code must be behind EOL detection.
+	if( index>=_cmdBufferSize )
+	{
+		// Max len detected.
+		maxLenReached = true;
+
+		_err = PCMD_TOO_MANY_CHAR_ERR;
+		DoEventCall( PCMD_ERROR_EVT );
+
+		return false;
+	}
+
+	return true;
 
 } // Read()
 
@@ -111,36 +128,40 @@ bool ParseCommands::read( char data )
 
 bool ParseCommands::doCommand( const char *c )
 {
-    _err = 1;                   // Clear error code.
+	if( !isMemoryOK() ) return false;
 
-    if( !_memOK )       // Memory allocation problems.
-    {
-        _err = -1;
-        return false;
-    }
+	if( !isBufferLenOK(c) ) return false;
 
-    if( (int)strlen(c) > _cmdBufferSize )
-    {   
-        _err = -3;
-        return false;
-    }
+	strcpy( _cmdBuffer, c);
+	strcpy( _lastCommand, c );
+	
+	DoEventCall( PCMD_DO_COMMAND_EVT );
 
-    strcpy( _cmdBuffer, c);
-    bool ret = parse();         // False if error.
-    if( ret ) _err = 1;         // Clear error code.
+	bool ret = parse();         		// False if error.
+	if( ret ) _err = PCMD_COMMAND_OK;	// Clear error code.
 
-    _cmdBuffer[0] = '\0';       // Clear input. Ready for next command.
-    return ret;
+	_cmdBuffer[0] = '\0';       		// Clear input. Ready for next command.
+
+	return ret;
 
 } // doCommand()
 
 ////////////////////////////////////
 
-char * ParseCommands::getLastCommand( void ) { return _lastCommand; }
+void ParseCommands::eventHandler( PCMD_EventCallbackFunction cb ) { _eventCB = cb; }
 
 ////////////////////////////////////
 
+
 void ParseCommands::setEOL( int eol ) { if( eol>=0 || eol<=EOLCNT) _eol = eol; }
+
+////////////////////////////////////
+
+char ParseCommands::getLastCharRead( void ) { return _lastChar; }
+
+////////////////////////////////////
+
+char * ParseCommands::getLastCommand( void ) { return _lastCommand; }
 
 ////////////////////////////////////
 
@@ -150,29 +171,28 @@ int ParseCommands::getError( void ) { return _err; }
 
 const __FlashStringHelper * ParseCommands::getErrorText( void )
 {
-    switch( _err )
-    {
-        case -1:
-            return F("Memory allocation problem.");
-        
-        case -2:
-            return F("Empty line.");
+	switch( _err )
+	{
+		case PCMD_MEM_ALLOCATION_ERR:
+			return F("Memory allocation problem.");
+		
+		case PCMD_EMPLY_LINE_ERR:
+			return F("Empty line.");
 
-        case -3:
-            return F("Too many char input.");
+		case PCMD_TOO_MANY_CHAR_ERR:
+			return F("Too many char input.");
 
-        case -4:
-            return F("Input to long.");
+		case PCMD_INPUT_TO_LONG_ERR:
+			return F("Input to long.");
 
-        case -5:
-            return F("Command not found.");
+		case PCMD_CMD_NOT_FOUND_ERR:
+			return F("Command not found.");
 
-        case -6:
-            return F("Too many arguments.");
+		case PCMD_TOO_MANY_ARGUMENTS_ERR:
+			return F("Too many arguments.");
+	}
 
-    }
-
-    return F("No error");
+	return F("No error");
 
 } // getErrorText()
 
@@ -182,89 +202,217 @@ const __FlashStringHelper * ParseCommands::getErrorText( void )
 
 bool ParseCommands::parse( void )
 {
-    char *split;        // Pointer to split position.
+	char *split;        // Pointer to split position.
+	_cmd = NULL;        // Clear command.
 
-    _cmd = NULL;        // Clear command.
+	split = strtok_c( _cmdBuffer );
 
-    split = strtok( _cmdBuffer, " " );
+	if( split != NULL )
+	{
+		// First part is command.
+		_cmd = split;
+		split = strtok_c( NULL );	// Next split.
+	}
 
-    // First part is command.
-    if( split != NULL )
-    {
-        _cmd = split;
-        split = strtok( NULL, " " );
-    }
+	// Read parameter if are.
+	_argc = 0;
+	while( split != NULL )
+	{
+		_argv[_argc] = split;
+		_argc++;
 
-    // Read parameter if are.
-    _argc = 0;
-    while( split != NULL )
-    {
-        _argv[_argc] = split;
-        _argc++;
+		if( _argc > _argcMax )
+		{
+			// To many parameter.
+			_err = PCMD_TOO_MANY_ARGUMENTS_ERR;
+			return false;       
+		}
+		split = strtok_c( NULL );        // Next split.
+	}
 
-        if( _argc > _argcMax )
-        {
-            // To many parameter.
-            _err = -6;
-            return false;       
-        }
-        split = strtok( NULL, " " );        // Next split.
-    }
+	// Search for command in list.
+	int index = 0;
+	bool cmdFound = false;
+	PCMD_CallbackFunction cb = NULL;
 
-    // Search for command in list.
-    int index = 0;
-    bool cmdFound = false;
-    CallbackFunction cb = NULL;
+	while( _cmds[index].cmd )
+	{
+		if( strcmp( _cmd, _cmds[index].cmd) == 0 )
+		{
+			// Command found.
+			cb = _cmds[index].cb;   // Get Callback.
+			cmdFound = true;
+			break;
+		}
+		index++;
+	}
 
-    while( _cmds[index].cmd )
-    {
-        if( strcmp( _cmd, _cmds[index].cmd) == 0 )
-        {
-            // Command found.
-            cb = _cmds[index].cb;   // Get Callback.
-            cmdFound = true;
-            break;
-        }
-        index++;
-    }
+	if( cmdFound && cb!=NULL ) 
+		cb( _argc, _argv );         // Call function.
+	else
+	{
+		_err = PCMD_CMD_NOT_FOUND_ERR;
+		DoEventCall( PCMD_ERROR_EVT );
+	}
 
-    if( cmdFound && cb!=NULL ) 
-        cb( _argc, _argv );         // Call function.
-    else
-    {
-        _err = -5;
-    }
-
-    return cmdFound;
+	return cmdFound;
 
 } // Parse()
 
 ////////////////////////////////////
 
+char * ParseCommands::strtok_c( char * s )
+{
+	static char *input = NULL;		// Pointer in input.
+	char *search, *tok=NULL;
+	int offset=0;
+	bool isQuote= false;
+	bool found, eol;
+
+	if( s != NULL )
+		input = s;			// Restart with new text else use old.
+
+    if( *input == '\0' )	// Empty input.
+		return NULL;
+
+	search = input;
+
+	// Find start.
+	found = false;
+	while( !found )
+	{
+		switch( *search )
+		{
+			case ' ':		// Space
+				input = search +1;		// Delete leading space.
+				break;
+
+			case '\"':		// Quote
+				// Quote, start string.
+				isQuote = true;
+				input = search +1;		// Delete Quote.
+				found = true;
+				break;
+
+			case '\0':      // EOL
+				return NULL;
+		        break;
+		        
+			default:
+				// Start without quotes.
+				found = true;
+				break;
+		}
+
+		search++;
+	}
+    
+    tok = input;        // Copy start pos for return.
+
+	found = eol = false;
+	offset = 0;
+	
+	// Find end.
+	while( !found && !eol )
+	{
+		switch( *search )
+		{
+			case ' ':		// Space
+				if( !isQuote )
+					found = true;	// End of part.
+				break;
+			
+			case '\"':		// Quote
+				if( isQuote )
+					found = true; // End of quoted string.
+				break;
+
+			case '\\':		// Escape char.
+				// Start escape char.
+				switch ( *(search+1) )
+				{
+					// Escape char?
+					case '\\':
+					case '\"':
+						offset++;
+						search++;
+						break;
+				}
+				break;
+				
+			case '\0':      // EOL
+		        eol = true;
+		        break;
+		}
+
+		*(search-offset) = *search;		// Move char do to escape chars.
+		search++;			// Next char.
+	}
+
+	*(search-offset-1) = '\0';
+
+	if( eol ) search--;		// Still on EOL.
+
+	input = search;			// For next iteration.
+
+	return tok;
+
+} // strtok_c()
+
+////////////////////////////////////
+
+void ParseCommands::DoEventCall( int event )
+{  
+	if( _eventCB != NULL ) _eventCB( event );
+
+} // DoEventCallback()
+
+////////////////////////////////////
+
 bool ParseCommands::AllocateMemory( size_t bs, size_t argc )
 {
-    bool noErr = true;
+	if( bs<=0 || argc<=0 ) return false;		// Wrong arguments.
 
-    if( bs<=0 || argc<=0 )
-        noErr = false;       // Wrong size.
-    else
-    {
-        _cmdBuffer = (char *) malloc( (bs+1) * sizeof( char ) );
-        _lastCommand = (char *) malloc( (bs+1) * sizeof( char ) );
-        _argv = (char **) malloc( (argc+1) * sizeof( char* ) );
+	_cmdBuffer = (char *) malloc( (bs+1) * sizeof( char ) );
+	_lastCommand = (char *) malloc( (bs+1) * sizeof( char ) );
+	_argv = (char **) malloc( (argc+1) * sizeof( char* ) );
 
-        if( _cmdBuffer==NULL || _lastCommand==NULL || _argv==NULL ) noErr = false;   // malloc faild.
-    }
+	if( _cmdBuffer==NULL || _lastCommand==NULL || _argv==NULL ) return false;   // malloc() faild.
 
-    if( noErr )
-    {
-        _cmdBufferSize = bs;
-        _argcMax = argc;
-        _cmdBuffer[0] = '\0';       // Clear input buffer.
-    }
+	_cmdBufferSize = bs;
+	_argcMax = argc;
+	_cmdBuffer[0] = '\0';       // Clear input buffer.
 
-    return noErr;
+	return true;
 
 } // AllocateMemory()
+
+////////////////////////////////////
+
+bool ParseCommands::isMemoryOK()
+{
+	if( _memOK ) return true;
+
+	// Memory allocation faild.
+	_err = PCMD_MEM_ALLOCATION_ERR;
+	DoEventCall( PCMD_ERROR_EVT );
+
+	return false;
+
+} // isMemoryOK()
+
+////////////////////////////////////
+
+bool ParseCommands::isBufferLenOK( const char *c )
+{
+	if( (int)strlen(c) <= _cmdBufferSize ) return true;
+
+	// To many input char.
+	_err = PCMD_TOO_MANY_CHAR_ERR;
+	DoEventCall( PCMD_ERROR_EVT );
+
+	return false;
+
+} // isBufferLenOK()
 
 // End of 'ParseCommands.cpp'.

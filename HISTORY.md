@@ -1,3 +1,11 @@
+### 1.5.0 - 2024-08-10
+
+    * Added  begin(), getLastCharRead()
+    * Added  eventHandler()
+    * Added  Error number constands, and event constants.
+    * Added  Arguments can be put between quotes.
+    * Change Change 'command_t' to 'pcmd_command_t' and tacke it out of the class.
+           
 ### 1.3.0 - 2024-06-24
 
     * Added 'getLastCommand()'.
