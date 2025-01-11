@@ -23,7 +23,7 @@ Download from [github](https://github.com/Gfy63/ParseCommands.git).
 ```cpp
 #include <ParseCommands.h>
 
-ParseCommands pCmd();         // Constructor.
+ParseCommands pCmd;         // Constructor.
 
 // Define the commands and hear callback functions
 struct pcmd_command_t commandList[] = {
