@@ -6,8 +6,8 @@
  *        If the command is found in the command list,
  *        than there callback function is called.
  * 		  A comment string can be defined. This return the rest of the comment as one parameter.
- * @version 1.6.0
- * @date 2025-07-31
+ * @version 1.6.1
+ * @date 2025-09-04
  * 
  * GPLv2 Licence https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
  * 
