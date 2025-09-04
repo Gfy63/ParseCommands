@@ -22,6 +22,8 @@ getLastCommand KEYWORD2
 setEOL KEYWORD2
 getError KEYWORD2
 getErrorText KEYWORD2
+setCommentString KEYWORD2
+getCommentString KEYWORD2
 
 #######################################
 # Structure (KEYWORD3)

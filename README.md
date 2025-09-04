@@ -47,13 +47,14 @@ void CmdTest( int argc, char *argv[] )
 
 ### SETUP
 
-The commands and callback functions are defind in a struct.
+The commands and callback functions are defined in a struct.
 The commands are case sensitive.
 
 ```cpp
 // Define the commands and hear callback functions
 struct pcmd_command_t commandList[] = {
 // command, callback function
+    ";", CmdComment,
     "test", CmdTest,
     "test2", CmdTest2,
     NULL, NULL              // END OF LIST (NEEDED)
@@ -119,6 +120,19 @@ If an argument need to contain a space, put it between quotes (`"`). You can use
 
 `"Test \"aaa\""` ==> Test "aaa"
 
+## Comment string
+If you use the comment string, the arguments aren't split and stay together in one argument.
+The default comment string is `;`.
+
+Exp:
+`"; 1 2 3"` ==> Comment `;` with argument 0 be `1 2 3`
+
+The comment string can be change with `setCommentString`. It can be up to 8 char long.
+
+The comment string command must be determined as a normal command in the command struct.
+
+You can use the comment string to send infos as a help text.
+
 ## Call by string
 A command can also pass as string. (exp.: fired from a button push)
 ```cpp
@@ -133,7 +147,7 @@ The `eventHandler()` define a function that can be use for debugging, echo, log 
 ```cpp
 void PCmd_EventHandler( int event );
 
-pcmd.EventCallback( Pcmp_EventCallback );
+pCmd.EventCallback( PCmd_EventCallback );
 
 void PCmd_EventCallback( int event )
 {
@@ -149,7 +163,7 @@ Posible events are:
     PCMD_ERROR_EVT
 ```
 
-Use `getLastCharRead()` and `getLastCommand()` to get the unfiltred input.
+Use `getLastCharRead()` and `getLastCommand()` to get the unfiltered input.
 
 ## Callback function
 
@@ -161,7 +175,7 @@ He has 2 arguments. (exp. `void test( int argc, char *argv[]) `)
 
 ## Errors
 
-The `read()` or `doCommand()` return false if a error accoutred.
+The `read()` or `doCommand()` return false if an error accoutered.
 
 Use `getError()` to get the error code and `getErrorText()` to get the error text.
 

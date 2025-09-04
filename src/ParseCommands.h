@@ -5,12 +5,13 @@
  *        Default input length is 16, default parameter count is 3.
  *        If the command is found in the command list,
  *        than there callback function is called.
- * @version 1.5.0
- * @date 2023-08-10
+ * 		  A comment string can be defined. This return the rest of the comment as one parameter.
+ * @version 1.6.0
+ * @date 2025-07-31
  * 
  * GPLv2 Licence https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
  * 
- * @copyright 2023-24
+ * @copyright 2023-25
  **********************************/
 
 #ifndef ParseCommands_h
@@ -139,6 +140,19 @@ class ParseCommands
 		void setEOL( int eol );
 
 		/**
+		 * @brief Set the comment string.
+		 * @param commentString New comment string.
+		 * @return	True: ok. (False: new string to long)
+		 */
+		bool setCommentString( char *commentString );
+
+		/**
+		 * @brief Get the comment string.
+		 * @return	Comment string.
+		 */
+		char *getCommentString( void );
+
+		/**
 		 * @brief Return the last char read.
 		 * @return	The last char.
 		 */
@@ -175,13 +189,15 @@ class ParseCommands
 		pcmd_command_t *_cmds;
 
 		#define EOLCNT 4
-		char const *_eolArry[EOLCNT] = {
+		const char *_eolArry[EOLCNT] = {
 			"\r\n",     // CR LF
 			"\r",       // CR
 			"\n",       // LF
 			"\n\r"      // LF CR
 		};
 		int _eol = CRLF;    // Default.
+
+		char _comment_str[8+1] = ";";	// Comment string.
 
 		int _cmdBufferSize=16;			// Max command buffer size.
 		char *_cmdBuffer;				// Command buffer. +1 for \0
@@ -212,9 +228,18 @@ class ParseCommands
 		 * @brief A sequence of calls split s into tokens, which are sequences of contiguous characters separated by space.
 		 * 		  Simulat to strtok() but a token can be put in quotes (").
 		 * @param	s String to splt. If NULL use the rest of the previouse call.
-		 * @return	Begin of the tken found.
+		 * @return	Begin of the token found.
 		 */
 		char * strtok_c( char * s );
+
+		/**
+		 * @brief Command split compleat.
+		 *        - If command exist, call the Callback.
+		 * @param	_cmd Command read.
+		 * @return true     command found.
+		 *         false    command not found.
+		 */
+		bool FindCmd( char *_cmd );
 
 		/**
 		 * @brief Call event_callback.

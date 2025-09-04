@@ -1,3 +1,8 @@
+### 1.6.0 - 2025-07-31
+
+    * Added Comment string. ( return the rest of the comment as 1 parameter )
+    * Added Set/get comment string.
+
 ### 1.5.0 - 2024-08-10
 
     * Added  begin(), getLastCharRead()

@@ -157,6 +157,26 @@ void ParseCommands::setEOL( int eol ) { if( eol>=0 || eol<=EOLCNT) _eol = eol; }
 
 ////////////////////////////////////
 
+bool ParseCommands::setCommentString( char *commentString )
+{
+	bool ret = false;
+
+	if( strlen( commentString ) > 8 ) return false;		// New string to lomg
+
+	strcpy( _comment_str, commentString );
+
+	return true;
+
+} // setCommentString()
+
+char * ParseCommands::getCommentString( void )
+{
+	return _comment_str;
+
+} // getCommentString()
+
+////////////////////////////////////
+
 char ParseCommands::getLastCharRead( void ) { return _lastChar; }
 
 ////////////////////////////////////
@@ -211,6 +231,16 @@ bool ParseCommands::parse( void )
 	{
 		// First part is command.
 		_cmd = split;
+
+		// Is comment
+		if( strcmp( _cmd, _comment_str ) == 0 )
+		{
+			_argv[0] = _cmdBuffer + strlen( _cmd ) + 1;	// Start of comment.
+			_argc = 1;
+
+			return FindCmd( _cmd );
+		}
+
 		split = strtok_c( NULL );	// Next split.
 	}
 
@@ -230,32 +260,7 @@ bool ParseCommands::parse( void )
 		split = strtok_c( NULL );        // Next split.
 	}
 
-	// Search for command in list.
-	int index = 0;
-	bool cmdFound = false;
-	PCMD_CallbackFunction cb = NULL;
-
-	while( _cmds[index].cmd )
-	{
-		if( strcmp( _cmd, _cmds[index].cmd) == 0 )
-		{
-			// Command found.
-			cb = _cmds[index].cb;   // Get Callback.
-			cmdFound = true;
-			break;
-		}
-		index++;
-	}
-
-	if( cmdFound && cb!=NULL ) 
-		cb( _argc, _argv );         // Call function.
-	else
-	{
-		_err = PCMD_CMD_NOT_FOUND_ERR;
-		DoEventCall( PCMD_ERROR_EVT );
-	}
-
-	return cmdFound;
+	return FindCmd( _cmd );
 
 } // Parse()
 
@@ -358,6 +363,39 @@ char * ParseCommands::strtok_c( char * s )
 	return tok;
 
 } // strtok_c()
+
+////////////////////////////////////
+
+bool ParseCommands::FindCmd( char *_cmd )
+{
+	// Search for command in list.
+	int index = 0;
+	bool cmdFound = false;
+	PCMD_CallbackFunction cb = NULL;
+
+	while( _cmds[index].cmd )
+	{
+		if( strcmp( _cmd, _cmds[index].cmd) == 0 )
+		{
+			// Command found.
+			cb = _cmds[index].cb;   // Get Callback.
+			cmdFound = true;
+			break;
+		}
+		index++;
+	}
+
+	if( cmdFound && cb!=NULL ) 
+		cb( _argc, _argv );         // Call function.
+	else
+	{
+		_err = PCMD_CMD_NOT_FOUND_ERR;
+		DoEventCall( PCMD_ERROR_EVT );
+	}
+
+	return cmdFound;
+
+} // FindCmd()
 
 ////////////////////////////////////
 
