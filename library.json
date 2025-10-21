@@ -16,10 +16,11 @@
       "maintainer": true
     }
   ],
-  "license": "GPL-2.0",
+  "license": "MIT",
   "homepage": "https://github.com/Gfy63/ParseCommands/",
   "dependencies": {
   },
   "frameworks": ["Arduino"],
-  "platforms": "*"
+  "platforms": "*",
+  "examples": "examples/*"
 }
