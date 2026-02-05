@@ -54,70 +54,87 @@ void ParseCommands::begin( pcmd_command_t *c )
 
 bool ParseCommands::read( char data )
 {
-	_lastChar = data;
+	static char _lastEoL = 0x00;			// Last Eol char. (CR or LF) 0x00 for No Cr or LF.
+	static bool maxLenReached = false;      // Max command len reached if true. Wait for next CR or LF ????
+
+	// Serial.printf( "Read: -%c- %i Cmd: -%s- Eol: %i\n", data, data, _cmdBuffer, _lastEoL );
+
+	_lastChar = data;		// Copy last char for getLastCharRead()
 
 	DoEventCall( PCMD_INPUT_CHAR_EVT );
 
-	if( !isMemoryOK() ) return false;
+	if( !isMemoryOK() ) return false;		// Memory error, Abort.
 
 	int index = strlen(_cmdBuffer);         // Index to the end of the used _cmdBuffer.
-	static bool maxLenReached = false;      // Max command len reached if true.
 
-	// Add char to command buffer.
-	_cmdBuffer[index] = data;
-	index++;
-	_cmdBuffer[index] = '\0';
-
-	// EoL found. Command complete.
-	char* eolFound = strstr( _cmdBuffer, _eolArry[_eol] );
-	if( eolFound )
+	if( index >= _cmdBufferSize )
 	{
-		eolFound[0] = '\0';     // Cutoff EOL.
-
-		if( strlen( _cmdBuffer ) == 0 )
-		{
-			// Empty line.
-			_err = PCMD_EMPLY_LINE_ERR;
-			DoEventCall( PCMD_ERROR_EVT );
-
-			return false;
-		}
-
-		if( maxLenReached )
-		{
-			// Ignore input while to long.
-			_cmdBuffer[0] = '\0';       // Clear input. Ready for next command.
-			maxLenReached = false;      // Ready for next input.
-
-			_err = PCMD_INPUT_TO_LONG_ERR;
-			DoEventCall( PCMD_ERROR_EVT );
-
-		   return false;
-		}
-
-		// Command complete to parse.
-		strcpy( _lastCommand, _cmdBuffer );   // Copy of command.
-
-		DoEventCall( PCMD_READ_COMMAND_EVT );
-
-		bool ret = parse();         		// False if error.
-		if( ret ) _err = PCMD_COMMAND_OK;	// Clear error code.
-		_cmdBuffer[0] = '\0';       		// Clear input. Ready for next command.
-
-		return ret;
-
-	} // EOL found
-	
-	// Code must be behind EOL detection.
-	if( index>=_cmdBufferSize )
-	{
-		// Max len detected.
+		// Input to long.
+		// Wait to CR or LF to restart new command.
 		maxLenReached = true;
-
-		_err = PCMD_TOO_MANY_CHAR_ERR;
+		_cmdBuffer[0] = '\0';       // Clear input. Ready for next command.
+				
+		_err = PCMD_TOO_MANY_CHAR_ERR;		// Error message.
 		DoEventCall( PCMD_ERROR_EVT );
 
-		return false;
+		return false;		// Abort.
+	}
+
+	if( data == '\n' || data == '\r' )
+	{
+		// EoL found.
+		if( _lastEoL == 0x00 || _lastEoL == data )
+		{
+			// First or same Eol as last char read.
+			// Do new line.
+
+			_lastEoL = data;	// Copy for next char.
+
+			if( maxLenReached )
+			{
+				// Ignore input while to long.
+				_cmdBuffer[0] = '\0';       // Clear input. Ready for next command.
+				maxLenReached = false;      // Ready for next input.
+
+				_err = PCMD_INPUT_TO_LONG_ERR;
+				DoEventCall( PCMD_ERROR_EVT );
+
+				return false;		// Abort.
+			}
+
+			if( strlen( _cmdBuffer ) == 0 )
+			{
+				// Empty line.
+				_err = PCMD_EMPLY_LINE_ERR;
+				DoEventCall( PCMD_ERROR_EVT );
+
+				return false;		// ABort.
+			}
+
+			// Command complete to parse.
+			strcpy( _lastCommand, _cmdBuffer );   // Copy of command.
+
+			DoEventCall( PCMD_READ_COMMAND_EVT );
+
+			bool ret = parse();         		// False if error.
+			if( ret ) _err = PCMD_COMMAND_OK;	// Clear error code.
+			_cmdBuffer[0] = '\0';       		// Clear input. Ready for next command.
+
+		}
+		else
+		{
+			// Ignore char. is 2end of CRLR or LFCR.
+			_lastEoL = 0x00;
+		}
+	}
+	else
+	{
+		// Add new char to command.
+		_cmdBuffer[index] = data;
+		index++;
+		_cmdBuffer[index] = '\0';
+
+		_lastEoL = 0x00;		// No EoL.
 	}
 
 	return true;
@@ -137,7 +154,7 @@ bool ParseCommands::doCommand( const char *c )
 	
 	DoEventCall( PCMD_DO_COMMAND_EVT );
 
-	bool ret = parse();         		// False if error.
+	bool ret = parse();					// False if error.
 	if( ret ) _err = PCMD_COMMAND_OK;	// Clear error code.
 
 	_cmdBuffer[0] = '\0';       		// Clear input. Ready for next command.
@@ -149,11 +166,6 @@ bool ParseCommands::doCommand( const char *c )
 ////////////////////////////////////
 
 void ParseCommands::eventHandler( PCMD_EventCallbackFunction cb ) { _eventCB = cb; }
-
-////////////////////////////////////
-
-
-void ParseCommands::setEOL( int eol ) { if( eol>=0 || eol<=EOLCNT) _eol = eol; }
 
 ////////////////////////////////////
 

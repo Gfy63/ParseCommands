@@ -6,12 +6,12 @@
  *        If the command is found in the command list,
  *        than there callback function is called.
  * 		  A comment string can be defined. This return the rest of the comment as one parameter.
- * @version 1.6.1
- * @date 2025-09-04
+ * @version 1.7.0
+ * @date 2026-02-04
  * 
  * GPLv2 Licence https://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
  * 
- * @copyright 2023-25
+ * @copyright 2023-26
  **********************************/
 
 #ifndef ParseCommands_h
@@ -37,11 +37,6 @@ enum pcmd_error { PCMD_COMMAND_OK=1,
  * List of events for eventHandler().
 */
 enum pcmd_events { PCMD_INPUT_CHAR_EVT=0, PCMD_READ_COMMAND_EVT, PCMD_DO_COMMAND_EVT, PCMD_ERROR_EVT };
-
-/**
- * List of allowed EOL values. (CRLF (default), CR, LF, LFCR 
-*/
-enum EOL { CRLF=0, CR, LF, LFCR };
 
 /**
  * --- STRUCT & TYPEDEF ---
@@ -134,12 +129,6 @@ class ParseCommands
 		void eventHandler( PCMD_EventCallbackFunction cb );
 
 		/**
-		 * @brief Select EOL.
-		 * @param eol CRLF (default), CR, LF, LFCR
-		 */
-		void setEOL( int eol );
-
-		/**
 		 * @brief Set the comment string.
 		 * @param commentString New comment string.
 		 * @return	True: ok. (False: new string to long)
@@ -187,15 +176,6 @@ class ParseCommands
 
 		// Command list.
 		pcmd_command_t *_cmds;
-
-		#define EOLCNT 4
-		const char *_eolArry[EOLCNT] = {
-			"\r\n",     // CR LF
-			"\r",       // CR
-			"\n",       // LF
-			"\n\r"      // LF CR
-		};
-		int _eol = CRLF;    // Default.
 
 		char _comment_str[8+1] = ";";	// Comment string.
 

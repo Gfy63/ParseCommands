@@ -5,13 +5,14 @@ Evaluate commands entered over serial or as string and call a defined function.
 * Use serial stream as input.
 * Use string as input.
 * Config commands in a struct.
-* Config EOL of the command.
+* EOL auto detection. ( CRLF, LFCR, CR or LF )
 * Max input buffer size and argument count configurable.
 * Event callback for debugging, echo, log and more.
 * Error detection.
 
 > [!CAUTION]
-> Since version 1.5.0 the struct `ParseCommand::command_t` is change to `pcmd_command_t`
+> - From version 1.7.0 the command `setEOL()` is obselate.
+> - From version 1.5.0 the struct `ParseCommand::command_t` is change to `pcmd_command_t`
 
 ## DOWNLOAD
 Download from [github](https://github.com/Gfy63/ParseCommands.git).
@@ -97,22 +98,10 @@ begin( pcmd_command_t *c );
 > [!NOTE]
 > The buffer size is only limited to the memory size in the device. If the size exceed the device possibilities, you get an error, and no input is possible.
 
-## Setup method
-The command ends with the `EOL`.
-
-`setEOL( int eol );` - set the EOL. 
-
-Allowd are:
-
-    CRLF (default)
-    CR
-    LF
-    LFCR
-
 ## Loop method
 This is the only method to be call from the loop.
 `void read()` read a char from any stream and complete the command. 
-After the `EOL` the command is parsed and fires the appropriate callback function.
+After the `CR` or `LF` detected the command is parsed and fires the appropriate callback function.
 
 ## Arguments
 The command can be followed by serval arguments. All arguments are separated by a space.

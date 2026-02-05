@@ -1,5 +1,9 @@
 # Changelog fot ParseCommands
 
+## [1.7.0] - 2026-02-04
+
+    * Remove setEOL(). EoL is now flexible, can be CRLF, LFCR, CR or LF.
+    
 ## [1.6.1] - 2025-09-04
 
     * Change Convert HISTORY.md to CHANGELOG.md
